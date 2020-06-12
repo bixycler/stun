@@ -1,3 +1,3 @@
-module github.com/pion/stun
+module github.com/bixycler/stun
 
-go 1.12
+go 1.14
