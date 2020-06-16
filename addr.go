@@ -37,20 +37,20 @@ type OtherAddress struct {
 // AddTo adds ALTERNATE-SERVER attribute to message.
 func (s *AlternateServer) AddTo(m *Message) error {
 	a := (*MappedAddress)(s)
-	return a.addAs(m, AttrAlternateServer)
+	return a.AddToAs(m, AttrAlternateServer)
 }
 
 // GetFrom decodes ALTERNATE-SERVER from message.
 func (s *AlternateServer) GetFrom(m *Message) error {
 	a := (*MappedAddress)(s)
-	return a.getAs(m, AttrAlternateServer)
+	return a.GetFromAs(m, AttrAlternateServer)
 }
 
 func (a MappedAddress) String() string {
 	return net.JoinHostPort(a.IP.String(), strconv.Itoa(a.Port))
 }
 
-func (a *MappedAddress) getAs(m *Message, t AttrType) error {
+func (a *MappedAddress) GetFromAs(m *Message, t AttrType) error {
 	v, err := m.Get(t)
 	if err != nil {
 		return err
@@ -84,7 +84,7 @@ func (a *MappedAddress) getAs(m *Message, t AttrType) error {
 	return nil
 }
 
-func (a *MappedAddress) addAs(m *Message, t AttrType) error {
+func (a *MappedAddress) AddToAs(m *Message, t AttrType) error {
 	var (
 		family = familyIPv4
 		ip     = a.IP
@@ -109,24 +109,24 @@ func (a *MappedAddress) addAs(m *Message, t AttrType) error {
 
 // AddTo adds MAPPED-ADDRESS to message.
 func (a *MappedAddress) AddTo(m *Message) error {
-	return a.addAs(m, AttrMappedAddress)
+	return a.AddToAs(m, AttrMappedAddress)
 }
 
 // GetFrom decodes MAPPED-ADDRESS from message.
 func (a *MappedAddress) GetFrom(m *Message) error {
-	return a.getAs(m, AttrMappedAddress)
+	return a.GetFromAs(m, AttrMappedAddress)
 }
 
 // AddTo adds OTHER-ADDRESS attribute to message.
 func (o *OtherAddress) AddTo(m *Message) error {
 	a := (*MappedAddress)(o)
-	return a.addAs(m, AttrOtherAddress)
+	return a.AddToAs(m, AttrOtherAddress)
 }
 
 // GetFrom decodes OTHER-ADDRESS from message.
 func (o *OtherAddress) GetFrom(m *Message) error {
 	a := (*MappedAddress)(o)
-	return a.getAs(m, AttrOtherAddress)
+	return a.GetFromAs(m, AttrOtherAddress)
 }
 
 func (o OtherAddress) String() string {
