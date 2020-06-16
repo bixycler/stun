@@ -26,6 +26,14 @@ type AlternateServer struct {
 	Port int
 }
 
+// ResponseOrigin represents RESPONSE-ORIGIN attribute.
+//
+// RFC 5780 Section 7.3
+type ResponseOrigin struct {
+	IP   net.IP
+	Port int
+}
+
 // OtherAddress represents OTHER-ADDRESS attribute.
 //
 // RFC 5780 Section 7.4
@@ -50,6 +58,7 @@ func (a MappedAddress) String() string {
 	return net.JoinHostPort(a.IP.String(), strconv.Itoa(a.Port))
 }
 
+// GetFromAs decodes MAPPED-ADDRESS value in message m as an attribute of type t.
 func (a *MappedAddress) GetFromAs(m *Message, t AttrType) error {
 	v, err := m.Get(t)
 	if err != nil {
@@ -84,10 +93,11 @@ func (a *MappedAddress) GetFromAs(m *Message, t AttrType) error {
 	return nil
 }
 
+// AddToAs adds MAPPED-ADDRESS value to m as t attribute.
 func (a *MappedAddress) AddToAs(m *Message, t AttrType) error {
 	var (
 		family = familyIPv4
-		ip     = a.IP
+		ip = a.IP
 	)
 	if len(a.IP) == net.IPv6len {
 		if isIPv4(ip) {
@@ -130,5 +140,21 @@ func (o *OtherAddress) GetFrom(m *Message) error {
 }
 
 func (o OtherAddress) String() string {
+	return net.JoinHostPort(o.IP.String(), strconv.Itoa(o.Port))
+}
+
+// AddTo adds RESPONSE-ORIGIN attribute to message.
+func (o *ResponseOrigin) AddTo(m *Message) error {
+	a := (*MappedAddress)(o)
+	return a.AddToAs(m, AttrResponseOrigin)
+}
+
+// GetFrom decodes RESPONSE-ORIGIN from message.
+func (o *ResponseOrigin) GetFrom(m *Message) error {
+	a := (*MappedAddress)(o)
+	return a.GetFromAs(m, AttrResponseOrigin)
+}
+
+func (o ResponseOrigin) String() string {
 	return net.JoinHostPort(o.IP.String(), strconv.Itoa(o.Port))
 }
