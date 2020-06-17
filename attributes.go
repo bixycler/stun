@@ -79,7 +79,8 @@ const (
 	AttrChangeRequest   AttrType = 0x0003 // CHANGE-REQUEST
 	AttrPadding         AttrType = 0x0026 // PADDING
 	AttrResponsePort    AttrType = 0x0027 // RESPONSE-PORT
-	AttrResponseOrigin  AttrType = 0x002b // RESPONSE-ORIGIN
+	AttrCacheTimeout    AttrType = 0x8027 // CACHE-TIMEOUT
+	AttrResponseOrigin  AttrType = 0x802b // RESPONSE-ORIGIN
 	AttrOtherAddress    AttrType = 0x802C // OTHER-ADDRESS
 )
 
@@ -124,6 +125,7 @@ var attrNames = map[AttrType]string{
 	AttrChangeRequest:          "CHANGE-REQUEST",
 	AttrPadding:                "PADDING",
 	AttrResponsePort:           "RESPONSE-PORT",
+	AttrCacheTimeout:           "CACHE-TIMEOUT",
 	AttrResponseOrigin:         "RESPONSE-ORIGIN",
 	AttrOtherAddress:           "OTHER-ADDRESS",
 	AttrSourceAddress:          "SOURCE-ADDRESS",
