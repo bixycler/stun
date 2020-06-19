@@ -58,9 +58,9 @@ func MappingTests(addrStr string) error {
 
 	// Test I: Regular binding request
 	if *verbose >=1 { fmt.Println("\nMapping Test I: Regular binding request") }
-	message := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
+	request := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
 
-	resp, err := mapTestConn.roundTrip(message, mapTestConn.RemoteAddr)
+	resp, err := mapTestConn.roundTrip(request, mapTestConn.RemoteAddr)
 	if err == ErrTimedOut {
 		if *verbose >=1 { fmt.Println("Error: timed out waiting for response from server") }
 		return err
@@ -93,7 +93,7 @@ func MappingTests(addrStr string) error {
 	if *verbose >=1 { fmt.Println("\nMapping Test II: Send binding request to the other address but primary port") }
 	oaddr := *mapTestConn.OtherAddr
 	oaddr.Port = mapTestConn.RemoteAddr.Port
-	resp, err = mapTestConn.roundTrip(message, &oaddr)
+	resp, err = mapTestConn.roundTrip(request, &oaddr)
 	if err == ErrTimedOut {
 		if *verbose >=1 { fmt.Println("Error: timed out waiting for response from server") }
 		return err
@@ -113,7 +113,7 @@ func MappingTests(addrStr string) error {
 
 	// Test III: Send binding request to the other address and port
 	if *verbose >=1 { fmt.Println("\nMapping Test III: Send binding request to the other address and port") }
-	resp, err = mapTestConn.roundTrip(message, mapTestConn.OtherAddr)
+	resp, err = mapTestConn.roundTrip(request, mapTestConn.OtherAddr)
 	if err == ErrTimedOut {
 		if *verbose >=1 { fmt.Println("Error: timed out waiting for response from server") }
 		return err
@@ -151,9 +151,9 @@ func FilteringTests(addrStr string) error {
 
 	// Test I: Regular binding request
 	if *verbose >=1 { fmt.Println("\nFiltering Test I: Regular binding request") }
-	message := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
+	request := stun.MustBuild(stun.TransactionID, stun.BindingRequest)
 
-	resp, err := mapTestConn.roundTrip(message, mapTestConn.RemoteAddr)
+	resp, err := mapTestConn.roundTrip(request, mapTestConn.RemoteAddr)
 	if err == ErrTimedOut {
 		if *verbose >=1 { fmt.Println("Error: timed out waiting for response from server") }
 		return err
@@ -166,12 +166,18 @@ func FilteringTests(addrStr string) error {
 		fmt.Println("Error: NAT discovery feature not supported by this server")
 		return ErrNoOtherAddress
 	}
+	addr, err := net.ResolveUDPAddr("udp4", otherAddr.String())
+	if err != nil {
+		if *verbose >=1 { fmt.Printf("Failed resolving OTHER-ADDRESS: %v\n", otherAddr) }
+		return err
+	}
+	mapTestConn.OtherAddr = addr
 
 	// Test II: Request to change both IP and port
 	if *verbose >=1 { fmt.Println("\nFiltering Test II: Request to change both IP and port") }
-	message.Add(stun.AttrChangeRequest, []byte{0x00, 0x00, 0x00, 0x06})
+	request.Reset(); request.Add(stun.AttrChangeRequest, []byte{0x00, 0x00, 0x00, 0x06})
 
-	resp, err = mapTestConn.roundTrip(message, mapTestConn.RemoteAddr)
+	resp, err = mapTestConn.roundTrip(request, mapTestConn.RemoteAddr)
 	if err == nil {
 		parse(resp)
 		fmt.Println("\n=> NAT filtering behavior: endpoint independent")
@@ -186,9 +192,9 @@ func FilteringTests(addrStr string) error {
 
 	// Test III: Request to change port only
 	if *verbose >=1 { fmt.Println("\nFiltering Test III: Request to change port only") }
-	message.Add(stun.AttrChangeRequest, []byte{0x00, 0x00, 0x00, 0x02})
+	request.Reset(); request.Add(stun.AttrChangeRequest, []byte{0x00, 0x00, 0x00, 0x02})
 
-	resp, err = mapTestConn.roundTrip(message, mapTestConn.RemoteAddr)
+	resp, err = mapTestConn.roundTrip(request, mapTestConn.RemoteAddr)
 	if err == nil {
 		parse(resp)
 		fmt.Println("\n=> NAT filtering behavior: address dependent")
@@ -272,6 +278,13 @@ func connect(addrStr string) (*StunServerConn, error) {
 
 // Send request and wait for response or timeout
 func (c *StunServerConn) roundTrip(msg *stun.Message, addr net.Addr) (*stun.Message, error) {
+	if *verbose >=1 { fmt.Printf("Send to %v: (%v bytes)\n", addr, msg.Length + 20) }
+	if *verbose >=2 {
+		fmt.Printf("%v\n", msg);
+        for _, attr := range msg.Attributes {
+            fmt.Printf("\t%v (l=%v)\n", attr, attr.Length)
+        }
+    }
 	_, err := c.conn.WriteTo(msg.Raw, addr)
 	if err != nil {
 		return nil, err
