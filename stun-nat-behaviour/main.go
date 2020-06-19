@@ -285,6 +285,7 @@ func (c *StunServerConn) roundTrip(msg *stun.Message, addr net.Addr) (*stun.Mess
             fmt.Printf("\t%v (l=%v)\n", attr, attr.Length)
         }
     }
+    msg.NewTransactionID()
 	_, err := c.conn.WriteTo(msg.Raw, addr)
 	if err != nil {
 		return nil, err
